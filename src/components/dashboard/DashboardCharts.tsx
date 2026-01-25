@@ -186,7 +186,7 @@ export function DashboardCharts() {
               <YAxis tick={{ fontSize: 12, fill: "#9CA3AF" }} stroke="#9CA3AF" allowDecimals={false} />
               <Tooltip
                 contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                formatter={(v: number) => [v, "Bookings"]}
+                formatter={(v: number | undefined) => [v ?? 0, "Bookings"]}
                 labelFormatter={(l) => `Date: ${l}`}
               />
               <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Bookings" />
@@ -206,7 +206,7 @@ export function DashboardCharts() {
               <YAxis tick={{ fontSize: 12, fill: "#9CA3AF" }} stroke="#9CA3AF" allowDecimals={false} />
               <Tooltip
                 contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }}
-                formatter={(v: number) => [v, "Customers"]}
+                formatter={(v: number | undefined) => [v ?? 0, "Customers"]}
               />
               <Line type="monotone" dataKey="value" stroke="#6366F1" strokeWidth={2} dot={{ fill: "#6366F1", r: 4 }} name="Customers" />
             </LineChart>
@@ -224,7 +224,7 @@ export function DashboardCharts() {
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-gray-200 dark:stroke-gray-600" />
                 <XAxis type="number" tick={{ fontSize: 12, fill: "#9CA3AF" }} stroke="#9CA3AF" allowDecimals={false} />
                 <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: "#9CA3AF" }} stroke="#9CA3AF" />
-                <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }} formatter={(v: number) => [v, "Bookings"]} />
+                <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }} formatter={(v: number | undefined) => [v ?? 0, "Bookings"]} />
                 <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} name="Bookings" />
               </BarChart>
             </ResponsiveContainer>
@@ -250,13 +250,13 @@ export function DashboardCharts() {
                   innerRadius={60}
                   outerRadius={90}
                   paddingAngle={2}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                 >
                   {bookingsByStatus.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => [v, "Count"]} contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }} />
+                <Tooltip formatter={(v: number | undefined) => [v ?? 0, "Count"]} contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB" }} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>

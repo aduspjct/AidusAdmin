@@ -7,6 +7,7 @@ interface ButtonProps {
   startIcon?: ReactNode;
   endIcon?: ReactNode;
   onClick?: () => void;
+  type?: "button" | "submit" | "reset";
   disabled?: boolean;
   className?: string;
 }
@@ -18,6 +19,7 @@ const Button: React.FC<ButtonProps> = ({
   startIcon,
   endIcon,
   onClick,
+  type = "button",
   className = "",
   disabled = false,
 }) => {
@@ -35,6 +37,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      type={type}
       className={`inline-flex items-center justify-center font-medium gap-2 rounded-lg transition ${className} ${
         sizeClasses[size]
       } ${variantClasses[variant]} ${

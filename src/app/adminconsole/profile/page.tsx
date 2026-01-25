@@ -321,7 +321,7 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start pb-4 sm:pb-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex-shrink-0">
               {user.photo ? (
-                <img src={user.photo} alt={getUserName()} className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" onError={(e) => { const t = e.target as HTMLImageElement; t.style.display = "none"; (t.nextElementSibling as HTMLElement)?.style.display = "flex"; }} />
+                <img src={user.photo} alt={getUserName()} className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700" onError={(e) => { const t = e.target as HTMLImageElement; t.style.display = "none"; const fallback = t.nextElementSibling as HTMLElement; if (fallback) fallback.style.display = "flex"; }} />
               ) : null}
               <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xl sm:text-2xl font-semibold text-gray-600 dark:text-gray-300 ${user.photo ? "hidden" : ""}`}>
                 {getUserName().split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
