@@ -55,9 +55,6 @@ export default function HeroSection() {
             <p className="text-description">
               From electricians to plumbers, get verified professionals at your doorstep with transparent pricing and secure payments.
             </p>
-            <button className="btn-primary">
-              Book Service
-            </button>
           </div>
 
           {/* Right Content - Phone Mockup with Serviceman */}

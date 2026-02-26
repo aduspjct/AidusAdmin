@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Aidus Admin',
-  description: 'Aidus Admin Dashboard',
+  title: 'Aidus',
+  description: 'Aidus Dashboard',
+  icons: {
+    icon: '/images/landing/logo/logo.png',
+  },
 };
 
 export default function RootLayout({

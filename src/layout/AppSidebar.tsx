@@ -5,22 +5,6 @@ import { useSidebar } from "@/context/SidebarContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Bar chart logo with blue–indigo gradient
-const LogoIcon = ({ className = "w-8 h-8" }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-    <defs>
-      <linearGradient id="sidebarLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#3B82F6" />
-        <stop offset="100%" stopColor="#6366F1" />
-      </linearGradient>
-    </defs>
-    <rect x="3" y="14" width="4" height="7" rx="1" fill="url(#sidebarLogoGrad)" />
-    <rect x="9" y="10" width="4" height="11" rx="1" fill="url(#sidebarLogoGrad)" />
-    <rect x="15" y="6" width="4" height="15" rx="1" fill="url(#sidebarLogoGrad)" />
-    <rect x="21" y="11" width="4" height="10" rx="1" fill="url(#sidebarLogoGrad)" />
-  </svg>
-);
-
 interface NavItem {
   href: string;
   label: string;
@@ -89,25 +73,6 @@ export default function AppSidebar() {
         </svg>
       ),
     },
-    {
-      href: "/adminconsole/detail",
-      label: "Detail Screen",
-      icon: (
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-    },
-    {
-      href: "/adminconsole/settings",
-      label: "Settings",
-      icon: (
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
-    },
   ];
 
   const isActive = (href: string) => {
@@ -128,10 +93,16 @@ export default function AppSidebar() {
           {/* Header: logo + brand name (menu toggle removed; use header toggle) */}
           <div className="flex h-16 items-center px-4 border-b border-gray-200 dark:border-gray-700">
             <div className={`flex min-w-0 flex-1 items-center gap-3 ${!(isExpanded || isHovered) ? "justify-center" : "justify-start"}`}>
-              <LogoIcon className="h-8 w-8 flex-shrink-0" />
+              <img
+                src="/images/landing/logo/logo.png"
+                alt="Aidus"
+                width={32}
+                height={32}
+                className="h-8 w-8 flex-shrink-0 object-contain"
+              />
               {(isExpanded || isHovered) && (
                 <h1 className="truncate text-lg font-bold text-gray-800 dark:text-white">
-                  Aidus Admin
+                  Aidus
                 </h1>
               )}
             </div>

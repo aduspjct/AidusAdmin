@@ -58,7 +58,7 @@ export default function Footer() {
                 <a href="#testimonials" className="footer-link">Testimonials</a>
               </li>
               <li>
-                <a href="#book" className="footer-link">Booking Form</a>
+                <a href="#book" className="footer-link">Contact Us</a>
               </li>
             </ul>
           </div>

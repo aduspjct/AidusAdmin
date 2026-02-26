@@ -30,12 +30,6 @@ export default function BusinessGrowSection() {
               ))}
             </ul>
 
-            
-            <button className="btn-primary-lg">
-              Register as a Provider
-            </button>
-
-
           </div>
 
           <div className="image-container image-container-right">

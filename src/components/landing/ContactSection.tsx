@@ -102,9 +102,9 @@ export default function ContactSection() {
             </div>
           </div>
 
-          {/* Right: Booking Form */}
+          {/* Right: Contact Form */}
           <div className="form-card">
-            <h3 className="booking-form-title">Booking Form</h3>
+            <h3 className="booking-form-title">Contact Us</h3>
             <form onSubmit={handleSubmit} className="booking-form">
               <div className="booking-form-grid">
                 <div className="booking-form-field">
@@ -193,7 +193,7 @@ export default function ContactSection() {
                 type="submit"
                 className="btn-primary booking-form-button"
               >
-                Get a quote
+                Contact Us
               </button>
             </form>
           </div>
