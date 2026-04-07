@@ -4,10 +4,12 @@ import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import UserDropdown from "@/components/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
 import React, { useState } from "react";
+import { getFirebaseEnv, setFirebaseEnv } from "@/lib/firebase/config";
 
 export default function AppHeader() {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const [firebaseEnv, setFirebaseEnvState] = useState<"production" | "development">(() => getFirebaseEnv());
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -19,6 +21,13 @@ export default function AppHeader() {
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
+  };
+
+  const handleFirebaseEnvChange = (env: "production" | "development") => {
+    setFirebaseEnv(env);
+    setFirebaseEnvState(env);
+    // Firebase app is initialized once; reload so the new env is used everywhere.
+    window.location.reload();
   };
 
   return (
@@ -88,6 +97,33 @@ export default function AppHeader() {
             } items-center justify-between w-full gap-4 px-5 py-4 lg:flex lg:h-16 lg:py-0 lg:justify-end lg:px-0 lg:shadow-none shadow-theme-md`}
         >
           <div className="flex items-center gap-2 2xsm:gap-3">
+            <div className="flex items-center rounded-lg border border-gray-200 bg-white px-2 py-1 dark:border-gray-700 dark:bg-gray-900">
+              <span className="mr-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                Firebase
+              </span>
+              <div className="flex overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => handleFirebaseEnvChange("production")}
+                  className={`px-2.5 py-1 text-xs font-semibold transition ${firebaseEnv === "production"
+                    ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
+                    : "bg-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+                    }`}
+                >
+                  Prod
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFirebaseEnvChange("development")}
+                  className={`px-2.5 py-1 text-xs font-semibold transition ${firebaseEnv === "development"
+                    ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
+                    : "bg-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+                    }`}
+                >
+                  Dev
+                </button>
+              </div>
+            </div>
             <ThemeToggleButton />
           </div>
           <UserDropdown />
@@ -96,4 +132,3 @@ export default function AppHeader() {
     </header>
   );
 }
-
