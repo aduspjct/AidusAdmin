@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { db, storage } from "@/lib/firebase/config";
-import { doc, getDoc, collection, getDocs, updateDoc, query, where, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, updateDoc, writeBatch } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -205,17 +205,38 @@ export default function UserDetail() {
         isBanned: newIsBanned,
       };
 
-      // On unban, reset cancellation and ignore counters, and clear cancellation records
+      // On unban, reset counters and remove this customer's cancellation docs
       if (currentlyBanned) {
         updateData.cancellationCountLast7Days = 0;
         updateData.ignoreCount = 0;
 
-        const cancellationsQuery = query(
-          collection(db, "CustomerCancellations"),
-          where("customerId", "==", userId)
-        );
-        const cancellationsSnap = await getDocs(cancellationsQuery);
-        await Promise.all(cancellationsSnap.docs.map((d) => deleteDoc(d.ref)));
+        try {
+          const cancellationsSnap = await getDocs(collection(db, "CustomerCancellations"));
+          const docsToDelete = cancellationsSnap.docs.filter((d) => {
+            const data = d.data();
+            const customerId = String(data.customerId ?? "").trim();
+            return customerId === userId;
+          });
+
+          // Firestore batches are limited to 500 operations
+          for (let i = 0; i < docsToDelete.length; i += 500) {
+            const chunk = docsToDelete.slice(i, i + 500);
+            const batch = writeBatch(db);
+            chunk.forEach((d) => batch.delete(d.ref));
+            await batch.commit();
+          }
+
+          console.log(
+            `Unban: deleted ${docsToDelete.length} CustomerCancellations doc(s) for customerId=${userId}`
+          );
+        } catch (cancelErr: any) {
+          console.error("Failed to delete CustomerCancellations docs:", cancelErr);
+          alert(
+            `User will be unbanned, but failed to delete cancellation records: ${
+              cancelErr?.message || "Unknown error"
+            }`
+          );
+        }
       }
 
       await updateDoc(doc(db, "UsersCollection", userId), updateData);
@@ -234,6 +255,7 @@ export default function UserDetail() {
       );
     } catch (e: any) {
       console.error("Ban update failed:", e);
+      alert(e?.message || "Ban/Unban update failed");
     } finally {
       setBanning(false);
     }
