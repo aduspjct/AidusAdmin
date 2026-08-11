@@ -205,34 +205,34 @@ export default function UserDetail() {
         isBanned: newIsBanned,
       };
 
-      // On unban, reset counters and remove this customer's cancellation docs
+      // On unban, reset counters and mark cancellation docs as not counting toward limit
       if (currentlyBanned) {
         updateData.cancellationCountLast7Days = 0;
         updateData.ignoreCount = 0;
 
         try {
           const cancellationsSnap = await getDocs(collection(db, "CustomerCancellations"));
-          const docsToDelete = cancellationsSnap.docs.filter((d) => {
+          const docsToUpdate = cancellationsSnap.docs.filter((d) => {
             const data = d.data();
             const customerId = String(data.customerId ?? "").trim();
             return customerId === userId;
           });
 
           // Firestore batches are limited to 500 operations
-          for (let i = 0; i < docsToDelete.length; i += 500) {
-            const chunk = docsToDelete.slice(i, i + 500);
+          for (let i = 0; i < docsToUpdate.length; i += 500) {
+            const chunk = docsToUpdate.slice(i, i + 500);
             const batch = writeBatch(db);
-            chunk.forEach((d) => batch.delete(d.ref));
+            chunk.forEach((d) => batch.update(d.ref, { countsTowardLimit: false }));
             await batch.commit();
           }
 
           console.log(
-            `Unban: deleted ${docsToDelete.length} CustomerCancellations doc(s) for customerId=${userId}`
+            `Unban: set countsTowardLimit=false on ${docsToUpdate.length} CustomerCancellations doc(s) for customerId=${userId}`
           );
         } catch (cancelErr: any) {
-          console.error("Failed to delete CustomerCancellations docs:", cancelErr);
+          console.error("Failed to update CustomerCancellations docs:", cancelErr);
           alert(
-            `User will be unbanned, but failed to delete cancellation records: ${
+            `User will be unbanned, but failed to update cancellation records: ${
               cancelErr?.message || "Unknown error"
             }`
           );
