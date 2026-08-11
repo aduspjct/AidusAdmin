@@ -249,14 +249,10 @@ export default function UserDetail() {
           }
 
           if (isProvider) {
-            // Match when document providerId equals the unbanned provider's userId
+            // Match docs where providerId equals the unbanned provider
             await setCountsTowardLimitFalse(
               "ProviderCancellations",
-              (data) => {
-                const docUserId = String(data.userId ?? "").trim();
-                const docProviderId = String(data.providerId ?? "").trim();
-                return docProviderId === userId && docUserId === userId;
-              }
+              (data) => String(data.providerId ?? "").trim() === userId
             );
           }
         } catch (cancelErr: any) {
