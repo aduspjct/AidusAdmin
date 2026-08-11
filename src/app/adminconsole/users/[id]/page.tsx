@@ -199,9 +199,6 @@ export default function UserDetail() {
       const newStatus = currentlyBanned ? "" : "isBanned";
       const newIsVerified = currentlyBanned ? true : false; // Unban: set to true, Ban: set to false
       const newIsBanned = !currentlyBanned;
-      const role = String(user.role || "").toLowerCase();
-      const isProvider = role === "provider";
-      const isCustomer = role === "customer" || !isProvider;
 
       const updateData: Record<string, any> = {
         status: newStatus,
@@ -212,14 +209,9 @@ export default function UserDetail() {
       // On unban, reset counters, clear bannedAt, and mark cancellation docs as not counting toward limit
       if (currentlyBanned) {
         updateData.bannedAt = deleteField();
-
-        if (isCustomer) {
-          updateData.cancellationCountLast7Days = 0;
-          updateData.ignoreCount = 0;
-        }
-        if (isProvider) {
-          updateData.declineCountLast7Days = 0;
-        }
+        updateData.cancellationCountLast7Days = 0;
+        updateData.ignoreCount = 0;
+        updateData.declineCountLast7Days = 0;
 
         const setCountsTowardLimitFalse = async (
           collectionName: string,
@@ -238,23 +230,25 @@ export default function UserDetail() {
           console.log(
             `Unban: set countsTowardLimit=false on ${docsToUpdate.length} ${collectionName} doc(s) for userId=${userId}`
           );
+          return docsToUpdate.length;
         };
 
         try {
-          if (isCustomer) {
-            await setCountsTowardLimitFalse(
-              "CustomerCancellations",
-              (data) => String(data.customerId ?? "").trim() === userId
-            );
-          }
+          // Customer cancellations: match customerId
+          const customerUpdated = await setCountsTowardLimitFalse(
+            "CustomerCancellations",
+            (data) => String(data.customerId ?? "").trim() === userId
+          );
 
-          if (isProvider) {
-            // Match docs where providerId equals the unbanned provider
-            await setCountsTowardLimitFalse(
-              "ProviderCancellations",
-              (data) => String(data.providerId ?? "").trim() === userId
-            );
-          }
+          // Provider cancellations: match providerId
+          const providerUpdated = await setCountsTowardLimitFalse(
+            "ProviderCancellations",
+            (data) => String(data.providerId ?? "").trim() === userId
+          );
+
+          console.log(
+            `Unban cleanup done for ${userId}: CustomerCancellations=${customerUpdated}, ProviderCancellations=${providerUpdated}`
+          );
         } catch (cancelErr: any) {
           console.error("Failed to update cancellation docs:", cancelErr);
           alert(
@@ -267,15 +261,6 @@ export default function UserDetail() {
 
       await updateDoc(doc(firestore, "UsersCollection", userId), updateData);
 
-      const localClears: Record<string, any> = { bannedAt: undefined };
-      if (isCustomer) {
-        localClears.cancellationCountLast7Days = 0;
-        localClears.ignoreCount = 0;
-      }
-      if (isProvider) {
-        localClears.declineCountLast7Days = 0;
-      }
-
       setUser((u) =>
         u
           ? {
@@ -283,7 +268,14 @@ export default function UserDetail() {
               status: newStatus,
               isVerified: newIsVerified,
               isBanned: newIsBanned,
-              ...(currentlyBanned ? localClears : {}),
+              ...(currentlyBanned
+                ? {
+                    bannedAt: undefined,
+                    cancellationCountLast7Days: 0,
+                    ignoreCount: 0,
+                    declineCountLast7Days: 0,
+                  }
+                : {}),
             }
           : null
       );
