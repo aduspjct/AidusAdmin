@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { db, storage } from "@/lib/firebase/config";
-import { doc, getDoc, collection, getDocs, updateDoc, writeBatch } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, updateDoc, writeBatch, deleteField } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -198,6 +198,9 @@ export default function UserDetail() {
       const newStatus = currentlyBanned ? "" : "isBanned";
       const newIsVerified = currentlyBanned ? true : false; // Unban: set to true, Ban: set to false
       const newIsBanned = !currentlyBanned;
+      const role = String(user.role || "").toLowerCase();
+      const isProvider = role === "provider";
+      const isCustomer = role === "customer" || !isProvider;
 
       const updateData: Record<string, any> = {
         status: newStatus,
@@ -205,20 +208,25 @@ export default function UserDetail() {
         isBanned: newIsBanned,
       };
 
-      // On unban, reset counters and mark cancellation docs as not counting toward limit
+      // On unban, reset counters, clear bannedAt, and mark cancellation docs as not counting toward limit
       if (currentlyBanned) {
-        updateData.cancellationCountLast7Days = 0;
-        updateData.ignoreCount = 0;
+        updateData.bannedAt = deleteField();
 
-        try {
-          const cancellationsSnap = await getDocs(collection(db, "CustomerCancellations"));
-          const docsToUpdate = cancellationsSnap.docs.filter((d) => {
-            const data = d.data();
-            const customerId = String(data.customerId ?? "").trim();
-            return customerId === userId;
-          });
+        if (isCustomer) {
+          updateData.cancellationCountLast7Days = 0;
+          updateData.ignoreCount = 0;
+        }
+        if (isProvider) {
+          updateData.declineCountLast7Days = 0;
+        }
 
-          // Firestore batches are limited to 500 operations
+        const setCountsTowardLimitFalse = async (
+          collectionName: string,
+          matchFn: (data: Record<string, any>) => boolean
+        ) => {
+          const snap = await getDocs(collection(db, collectionName));
+          const docsToUpdate = snap.docs.filter((d) => matchFn(d.data()));
+
           for (let i = 0; i < docsToUpdate.length; i += 500) {
             const chunk = docsToUpdate.slice(i, i + 500);
             const batch = writeBatch(db);
@@ -227,10 +235,31 @@ export default function UserDetail() {
           }
 
           console.log(
-            `Unban: set countsTowardLimit=false on ${docsToUpdate.length} CustomerCancellations doc(s) for customerId=${userId}`
+            `Unban: set countsTowardLimit=false on ${docsToUpdate.length} ${collectionName} doc(s) for userId=${userId}`
           );
+        };
+
+        try {
+          if (isCustomer) {
+            await setCountsTowardLimitFalse(
+              "CustomerCancellations",
+              (data) => String(data.customerId ?? "").trim() === userId
+            );
+          }
+
+          if (isProvider) {
+            // Match when document providerId equals the unbanned provider's userId
+            await setCountsTowardLimitFalse(
+              "ProviderCancellations",
+              (data) => {
+                const docUserId = String(data.userId ?? "").trim();
+                const docProviderId = String(data.providerId ?? "").trim();
+                return docProviderId === userId && docUserId === userId;
+              }
+            );
+          }
         } catch (cancelErr: any) {
-          console.error("Failed to update CustomerCancellations docs:", cancelErr);
+          console.error("Failed to update cancellation docs:", cancelErr);
           alert(
             `User will be unbanned, but failed to update cancellation records: ${
               cancelErr?.message || "Unknown error"
@@ -240,6 +269,16 @@ export default function UserDetail() {
       }
 
       await updateDoc(doc(db, "UsersCollection", userId), updateData);
+
+      const localClears: Record<string, any> = { bannedAt: undefined };
+      if (isCustomer) {
+        localClears.cancellationCountLast7Days = 0;
+        localClears.ignoreCount = 0;
+      }
+      if (isProvider) {
+        localClears.declineCountLast7Days = 0;
+      }
+
       setUser((u) =>
         u
           ? {
@@ -247,9 +286,7 @@ export default function UserDetail() {
               status: newStatus,
               isVerified: newIsVerified,
               isBanned: newIsBanned,
-              ...(currentlyBanned
-                ? { cancellationCountLast7Days: 0, ignoreCount: 0 }
-                : {}),
+              ...(currentlyBanned ? localClears : {}),
             }
           : null
       );
