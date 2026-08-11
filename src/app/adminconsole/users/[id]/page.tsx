@@ -192,6 +192,7 @@ export default function UserDetail() {
 
   const handleBan = async () => {
     if (!db || !userId || !user) return;
+    const firestore = db;
     setBanning(true);
     try {
       const currentlyBanned = isUserBanned();
@@ -224,12 +225,12 @@ export default function UserDetail() {
           collectionName: string,
           matchFn: (data: Record<string, any>) => boolean
         ) => {
-          const snap = await getDocs(collection(db, collectionName));
+          const snap = await getDocs(collection(firestore, collectionName));
           const docsToUpdate = snap.docs.filter((d) => matchFn(d.data()));
 
           for (let i = 0; i < docsToUpdate.length; i += 500) {
             const chunk = docsToUpdate.slice(i, i + 500);
-            const batch = writeBatch(db);
+            const batch = writeBatch(firestore);
             chunk.forEach((d) => batch.update(d.ref, { countsTowardLimit: false }));
             await batch.commit();
           }
@@ -268,7 +269,7 @@ export default function UserDetail() {
         }
       }
 
-      await updateDoc(doc(db, "UsersCollection", userId), updateData);
+      await updateDoc(doc(firestore, "UsersCollection", userId), updateData);
 
       const localClears: Record<string, any> = { bannedAt: undefined };
       if (isCustomer) {
