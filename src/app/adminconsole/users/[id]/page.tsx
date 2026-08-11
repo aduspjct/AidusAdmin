@@ -170,7 +170,10 @@ export default function UserDetail() {
 
   const getServiceName = (id: string) => services[id]?.name || services[id]?.title || id;
 
-  const isUserBanned = () => ["true", "isbanned", "yes"].includes(String(user?.status || "").toLowerCase());
+  const isUserBanned = () =>
+    user?.isBanned === true ||
+    String(user?.isBanned || "").toLowerCase() === "true" ||
+    ["true", "isbanned", "yes"].includes(String(user?.status || "").toLowerCase());
   const isUserVerified = () => user?.isVerified === true || String(user?.isVerified || "").toLowerCase() === "true" || String(user?.isVerified || "").toLowerCase() === "verified";
 
   const handleVerify = async () => {
@@ -191,15 +194,37 @@ export default function UserDetail() {
     if (!db || !userId || !user) return;
     setBanning(true);
     try {
-      const isBanned = isUserBanned();
-      const newStatus = isBanned ? "" : "isBanned";
-      const newIsVerified = isBanned ? true : false; // Unban: set to true, Ban: set to false
+      const currentlyBanned = isUserBanned();
+      const newStatus = currentlyBanned ? "" : "isBanned";
+      const newIsVerified = currentlyBanned ? true : false; // Unban: set to true, Ban: set to false
+      const newIsBanned = !currentlyBanned;
 
-      await updateDoc(doc(db, "UsersCollection", userId), {
+      const updateData: Record<string, any> = {
         status: newStatus,
-        isVerified: newIsVerified
-      });
-      setUser((u) => (u ? { ...u, status: newStatus, isVerified: newIsVerified } : null));
+        isVerified: newIsVerified,
+        isBanned: newIsBanned,
+      };
+
+      // On unban, reset cancellation and ignore counters
+      if (currentlyBanned) {
+        updateData.cancellationCountLast7Days = 0;
+        updateData.ignoreCount = 0;
+      }
+
+      await updateDoc(doc(db, "UsersCollection", userId), updateData);
+      setUser((u) =>
+        u
+          ? {
+              ...u,
+              status: newStatus,
+              isVerified: newIsVerified,
+              isBanned: newIsBanned,
+              ...(currentlyBanned
+                ? { cancellationCountLast7Days: 0, ignoreCount: 0 }
+                : {}),
+            }
+          : null
+      );
     } catch (e: any) {
       console.error("Ban update failed:", e);
     } finally {

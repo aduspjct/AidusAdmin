@@ -102,22 +102,22 @@ const missingVars = Object.entries(requiredEnvVars)
 
 if (missingVars.length > 0) {
   const errorMessage = `
-⚠️  Firebase Configuration Error
+    ⚠️  Firebase Configuration Error
 
-Missing or empty environment variables:
-${missingVars.map(v => `  - ${v}`).join('\n')}
+    Missing or empty environment variables:
+    ${missingVars.map(v => `  - ${v}`).join('\n')}
 
-Please create a .env.local file in the root directory with your Firebase configuration.
-You can use env.example as a template.
+    Please create a .env.local file in the root directory with your Firebase configuration.
+    You can use env.example as a template.
 
-Example:
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-  `.trim();
+    Example:
+    NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+      `.trim();
 
   if (typeof window === 'undefined') {
     // Server-side: throw error

@@ -219,10 +219,12 @@ export default function UserManagement() {
   };
 
   const getUserStatus = (user: User) => {
-    // First priority: Check if account is banned (isBanned is a string value)
-    // Check if isBanned string value indicates banned status
-    const isBannedValue = String(user.status);
-    if (isBannedValue === "true" || isBannedValue === "isBanned" || isBannedValue === "yes") {
+    // First priority: Check if account is banned (isBanned flag or status)
+    if (
+      user.isBanned === true ||
+      String(user.isBanned || "").toLowerCase() === "true" ||
+      ["true", "isbanned", "yes"].includes(String(user.status || "").toLowerCase())
+    ) {
       return "banned";
     }
 
