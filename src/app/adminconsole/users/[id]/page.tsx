@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { db, storage } from "@/lib/firebase/config";
-import { doc, getDoc, collection, getDocs, updateDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, updateDoc, query, where, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -205,10 +205,17 @@ export default function UserDetail() {
         isBanned: newIsBanned,
       };
 
-      // On unban, reset cancellation and ignore counters
+      // On unban, reset cancellation and ignore counters, and clear cancellation records
       if (currentlyBanned) {
         updateData.cancellationCountLast7Days = 0;
         updateData.ignoreCount = 0;
+
+        const cancellationsQuery = query(
+          collection(db, "CustomerCancellations"),
+          where("customerId", "==", userId)
+        );
+        const cancellationsSnap = await getDocs(cancellationsQuery);
+        await Promise.all(cancellationsSnap.docs.map((d) => deleteDoc(d.ref)));
       }
 
       await updateDoc(doc(db, "UsersCollection", userId), updateData);
